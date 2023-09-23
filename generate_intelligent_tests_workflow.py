@@ -1,27 +1,33 @@
 total_jobs = 40
 job_prefix = "run_tests_"
 
+# Print the workflow name and trigger conditions
 print("name: intelligent-tests-pr")
 print("on:")
 print("  workflow_dispatch:")
 print("  pull_request:")
 print("    types: [ labeled, opened, synchronize, reopened, review_requested ]")
 print()
+
 print("permissions:")
 print("  actions: read")
+
 print("jobs:")
 print("  display_test_results:")
 print("    if: ${{ always() }}")
 print("    runs-on: ubuntu-latest")
 print("    needs:")
 
+# Print the dependencies for the display_test_results job
 for i in range(1, total_jobs + 1):
     print(f"      - {job_prefix}{i}")
 print()
+
 print("    steps:")
 print("      - name: Download all test results")
 print("        uses: actions/download-artifact@v3")
 print()
+
 print("      - name: Combined Test Results")
 print("        run: |")
 print(
@@ -31,6 +37,7 @@ print(
 print('          echo "Test results summary:"')
 print("          cat combined_test_results.txt")
 print()
+
 print("      - name: New Failures Introduced")
 print("        run: |")
 print(
@@ -44,6 +51,8 @@ print("          else")
 print('              echo "This PR does not introduce any new test failures! Yippee!"')
 print("          fi")
 print()
+
+# Print the jobs for running individual tests
 for i in range(1, total_jobs + 1):
     print(f"  {job_prefix}{i}:")
     print("    runs-on: ubuntu-latest")
@@ -56,6 +65,7 @@ for i in range(1, total_jobs + 1):
     print('          submodules: "recursive"')
     print("          fetch-depth: 100")
     print()
+
     print("      - name: Determine and Run Tests")
     print("        id: tests")
     print("        run: |")
@@ -80,19 +90,23 @@ for i in range(1, total_jobs + 1):
     )
     print("        continue-on-error: true")
     print()
+
     print("      - name: Upload test results")
     print("        uses: actions/upload-artifact@v3")
     print("        with:")
     print(f"          name: test_results_{i}")
     print(f"          path: ivy/test_results_{i}.txt")
     print()
+
     print("      - name: Upload New Failures")
     print("        uses: actions/upload-artifact@v3")
     print("        with:")
     print(f"          name: new_failures_{i}")
     print(f"          path: ivy/new_failures_{i}.txt")
     print()
+
     print("      - name: Check on failures")
     print("        if: steps.tests.outcome != 'success'")
     print("        run: exit 1")
     print()
+
