@@ -3,22 +3,48 @@ import os
 import glob
 
 
+# def get_all_functions_from_directory(root_dir, startswith="test"):
+#     if not os.path.exists(root_dir):
+#         print("Invalid directory")
+#         exit(1)
+#     functions_names = []
+#     for filename in glob.iglob(root_dir + "/**/*.py", recursive=True):
+#         if len(filename) >= 2 and filename[:2] == "./":
+#             filename = filename[2:]
+#         filename = filename.replace(".py", "")
+#         filename = filename.replace("/", ".")
+#         module = importlib.import_module(filename)
+#         module_functions_names = [
+#             obj for obj in dir(module) if obj.startswith(startswith)
+#         ]
+#         functions_names.extend(module_functions_names)
+#     return functions_names
+
+import os
+import glob
+import importlib
+
 def get_all_functions_from_directory(root_dir, startswith="test"):
     if not os.path.exists(root_dir):
         print("Invalid directory")
-        exit(1)
+        return []
+    
     functions_names = []
     for filename in glob.iglob(root_dir + "/**/*.py", recursive=True):
-        if len(filename) >= 2 and filename[:2] == "./":
+        if filename.startswith("./"):
             filename = filename[2:]
-        filename = filename.replace(".py", "")
-        filename = filename.replace("/", ".")
-        module = importlib.import_module(filename)
-        module_functions_names = [
-            obj for obj in dir(module) if obj.startswith(startswith)
-        ]
-        functions_names.extend(module_functions_names)
+        module_name = os.path.splitext(os.path.relpath(filename, root_dir))[0].replace(os.path.sep, ".")
+        try:
+            module = importlib.import_module(module_name)
+            module_functions_names = [obj for obj in dir(module) if obj.startswith(startswith) and callable(getattr(module, obj))]
+            functions_names.extend(module_functions_names)
+        except (ImportError, ModuleNotFoundError) as e:
+            print(f"Error importing module {module_name}: {e}")
     return functions_names
+
+# Example usage:
+# functions = get_all_functions_from_directory("/path/to/your/directory", startswith="test")
+# print(functions)
 
 
 def check_duplicate():
