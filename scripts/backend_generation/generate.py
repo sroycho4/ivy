@@ -97,19 +97,26 @@ def _get_user_input(fn, *args, **kwargs):
             exit()
 
 
+from colorama import Fore, Style  # Assuming you are using colorama for text formatting
+import inspect
+from importlib import import_module
+
 def _update_native_config_value(key):
     # Handle the logic for updating native config
+
+    # Prompt the user for input
     ret = input(
         "\nPress ENTER to skip, use full namespace\n"
         f"Enter a value for {Style.BRIGHT + key + Style.NORMAL} "
-        "(case sensistive) "
+        "(case-sensitive) "
         f"default: '{Style.BRIGHT}{config_natives[key]['name']}{Style.NORMAL}': "
     )
+
     if ret != "" and _imported_backend is not None:
         parsed = ret.strip().rpartition(".")
         try:
             if parsed[1] == "":
-                # Primitve type
+                # Handle primitive types
                 try:
                     obj = __builtins__.__dict__[parsed[-1]]
                 except KeyError:
@@ -119,7 +126,7 @@ def _update_native_config_value(key):
                 try:
                     mod = import_module(parsed[0])
                 except ModuleNotFoundError:
-                    print(Fore.RED + f"failed to import {parsed[0]}")
+                    print(Fore.RED + f"Failed to import {parsed[0]}")
                     return False
                 try:
                     obj = getattr(mod, parsed[-1])
@@ -130,11 +137,14 @@ def _update_native_config_value(key):
                 print(Fore.RED + f"{obj} is not a class.")
                 return False
             print(Fore.GREEN + f"Found class: {obj}")
-            # Use alias if exists
+
+            # Use alias if it exists
             if backend["alias"] is not None:
                 modified_namespace = parsed[0].replace(
                     backend["name"], backend["alias"], 1
                 )
+
+            # Update the config_natives dictionary
             config_natives[key] = asdict(
                 BackendNativeObject(name=parsed[-1], namespace=modified_namespace)
             )
@@ -142,7 +152,9 @@ def _update_native_config_value(key):
         except KeyError:
             print(Fore.RED + f"Couldn't find {ret}")
             return False
+
     return True
+
 
 
 def _should_install_backend(package_name):
